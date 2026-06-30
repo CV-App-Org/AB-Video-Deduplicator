@@ -21,10 +21,11 @@ PyQt5 `xcb` platform plugin fail to load and the app crash on launch. This app o
 `opencv-python-headless` instead. The startup update script enforces this; do not switch
 back to `opencv-python`.
 
-### Known pre-existing bug (not an environment issue)
-On Linux + Python 3.12 the final mux step fails with `ValueError: flush of closed file` at
-`src/main.py` (`writer_process.stdin.close()` immediately followed by
-`writer_process.communicate()`). On POSIX, `communicate()` flushes the already-closed stdin
-and raises; on Windows `communicate()` skips that flush, which is why the upstream author
-never hit it. Frame blending completes (all frames are processed, progress reaches 89%) but
-the output file is never written. This is application code, left unmodified during env setup.
+### POSIX `flush of closed file` fix
+The final mux step in `src/main.py` used to call `writer_process.stdin.close()` immediately
+before `writer_process.communicate()`. On POSIX + Python 3.12 `communicate()` flushes the
+already-closed stdin and raises `ValueError: flush of closed file`, so the run got stuck at
+89% and never wrote the output (Windows `communicate()` skips that flush, which is why the
+upstream author never hit it). This branch removes the redundant `stdin.close()` and lets
+`communicate()` flush/close stdin itself; the full pipeline now completes to 100% and writes
+the output video on Linux.
