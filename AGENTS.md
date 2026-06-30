@@ -29,3 +29,10 @@ already-closed stdin and raises `ValueError: flush of closed file`, so the run g
 upstream author never hit it). This branch removes the redundant `stdin.close()` and lets
 `communicate()` flush/close stdin itself; the full pipeline now completes to 100% and writes
 the output video on Linux.
+
+### C++ / Qt5 edition (`cpp/`)
+`cpp/` is a standalone native port (Qt5 Widgets + ffmpeg/ffprobe, no OpenCV). Build with
+`cmake -S cpp -B cpp/build && cmake --build cpp/build -j`. Gotcha: the default `cc`/`c++` on
+this VM is Clang without a usable `libstdc++`, so pass `-DCMAKE_CXX_COMPILER=g++` to CMake.
+The binary `cpp/build/ab_dedup` runs the GUI by default, or a headless
+`--cli <A> <B> <out> <fps>` mode used for automated testing. See `cpp/README.md`.
