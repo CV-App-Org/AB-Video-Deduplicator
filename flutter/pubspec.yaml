@@ -43,6 +43,9 @@ dependencies:
   # FFmpeg as a bundled library, used ONLY on Android (maintained fork of the
   # retired arthenica FFmpegKit). Desktop uses the system ffmpeg via Process.
   ffmpeg_kit_flutter_new: ^4.3.2
+  # Save the result to the system gallery on Android (scoped-storage friendly).
+  # Used only on Android; desktop writes to the user-picked path directly.
+  gal: ^2.3.2
 
 dev_dependencies:
   flutter_test:

@@ -67,6 +67,14 @@ Two ways:
 2. **Direct download:** a pre-built `app-release.apk` produced during development
    is attached to the PR / cloud-agent artifacts.
 
+## Output location
+
+- **Desktop:** you pick the output path via the save dialog.
+- **Android:** Android's scoped storage doesn't give a plain writable path from a
+  save dialog, so the result is written to a temp file and then saved to the
+  **system gallery** (album `ABDedup`) via MediaStore (`gal`). No "output path"
+  picker is shown on Android.
+
 ## Notes / limitations
 
 - PNG intermediate frames trade disk for simplicity; long/high-res/high-fps

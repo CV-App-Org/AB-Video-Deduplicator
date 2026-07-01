@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -24,7 +27,10 @@ class _HomePageState extends State<HomePage> {
   final List<String> _logs = <String>[];
   final ScrollController _logScroll = ScrollController();
 
-  bool get _ready => _videoA != null && _videoB != null && _output != null;
+  // On Android the output is auto-saved to the gallery (scoped storage), so a
+  // user-picked output path is not required; on desktop it is.
+  bool get _ready =>
+      _videoA != null && _videoB != null && (Platform.isAndroid || _output != null);
 
   Future<void> _pickVideo(bool isA) async {
     final res = await FilePicker.platform.pickFiles(type: FileType.video);
@@ -70,17 +76,28 @@ class _HomePageState extends State<HomePage> {
     try {
       final baseTemp = await getTemporaryDirectory();
       final tempDir = p.join(baseTemp.path, 'ab_dedup_flutter');
+      final String outPath = Platform.isAndroid
+          ? p.join(baseTemp.path,
+              'C_${DateTime.now().millisecondsSinceEpoch}.mp4')
+          : _output!;
       final pipeline = DedupPipeline(createFfmpegExecutor());
       await pipeline.process(
         videoA: _videoA!,
         videoB: _videoB!,
-        output: _output!,
+        output: outPath,
         fps: _fps,
         useGpu: _useGpu,
         tempDir: tempDir,
         onProgress: (v) => setState(() => _progress = v / 100.0),
         onStatus: _log,
       );
+      if (Platform.isAndroid) {
+        if (!await Gal.hasAccess(toAlbum: true)) {
+          await Gal.requestAccess(toAlbum: true);
+        }
+        await Gal.putVideo(outPath, album: 'ABDedup');
+        _log('已保存到系统相册（相簿：ABDedup）');
+      }
       _log('处理完成！');
     } catch (e) {
       _log('❌ 错误：$e');
@@ -113,7 +130,24 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 12),
               _pathRow('视频B路径（原创）', _videoB, () => _pickVideo(false)),
               const SizedBox(height: 12),
-              _pathRow('输出路径', _output, _pickOutput),
+              if (Platform.isAndroid)
+                _card(
+                  child: Row(
+                    children: const <Widget>[
+                      SizedBox(
+                        width: 130,
+                        child: Text('输出路径',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                      Expanded(
+                        child: Text('处理完成后自动保存到系统相册（相簿：ABDedup）',
+                            style: TextStyle(color: Color(0xFFe0e0e0))),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                _pathRow('输出路径', _output, _pickOutput),
               const SizedBox(height: 16),
               _card(
                 child: Column(
