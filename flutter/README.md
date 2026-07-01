@@ -75,6 +75,28 @@ Two ways:
   **system gallery** (album `ABDedup`) via MediaStore (`gal`). No "output path"
   picker is shown on Android.
 
+## Slim APK — split per ABI
+
+A universal release APK bundles ffmpeg native libs for all ABIs (~222 MB). Build
+one APK per ABI so each device only downloads its own:
+
+```bash
+flutter build apk --release --split-per-abi
+```
+
+Measured sizes (full-gpl ffmpeg):
+
+| APK | Size |
+| --- | --- |
+| universal | ~222 MB |
+| `app-arm64-v8a-release.apk` (most modern phones) | ~60 MB |
+| `app-x86_64-release.apk` | ~68 MB |
+| `app-armeabi-v7a-release.apk` | ~95 MB |
+
+The CI workflow builds and publishes all per-ABI APKs. Install the one matching
+your device (arm64-v8a for virtually all recent phones). For Play Store delivery,
+an `.aab` (`flutter build appbundle`) lets Google serve only the needed ABI.
+
 ## Notes / limitations
 
 - PNG intermediate frames trade disk for simplicity; long/high-res/high-fps
