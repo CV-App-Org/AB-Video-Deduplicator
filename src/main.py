@@ -341,7 +341,6 @@ class VideoProcessor(QThread):
                 if reader_b_gen:
                     reader_b_gen.close()
             self.status.emit(f"混合完成，正在生成最终视频文件... (t={time.time() - start_time:.2f}s)")
-            writer_process.stdin.close()
             _, stderr_output = writer_process.communicate()
             if writer_process.returncode != 0:
                 raise RuntimeError(f"FFmpeg写入视频失败: {stderr_output.decode('utf-8', errors='ignore')}")
